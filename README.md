@@ -1,3 +1,7 @@
+# Hosting
+
+Currently hosted with Railway.app!
+
 # DTS User Guide
 
 Congrats! You just saved yourself hours of work by bootstrapping this project with DTS. Let’s get you oriented with what’s here and how to use it.
@@ -10,7 +14,7 @@ Congrats! You just saved yourself hours of work by bootstrapping this project wi
 
 DTS scaffolds your new library inside `/src`.
 
-_Must run `yarn build` before you can run `yarn start`.
+_Must run `yarn build` before you can run `yarn start`._
 
 To run DTS, use:
 
