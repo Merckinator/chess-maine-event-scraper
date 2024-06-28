@@ -34,7 +34,6 @@
   "jest": {
     "testEnvironment": "node"
   },
-  "peerDependencies": {},
   "engines": {
     "node": ">=12"
   },
@@ -63,6 +62,8 @@
   "dependencies": {
     "axios": "^0.27.2",
     "cheerio": "^1.0.0-rc.12",
-    "node-cron": "^3.0.2"
+    "mysql2": "^3.10.1",
+    "node-cron": "^3.0.2",
+    "sequelize": "^6.37.3"
   }
 }
