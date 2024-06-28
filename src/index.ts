@@ -35,7 +35,15 @@ cron.schedule('0 * * * *', async () => {
       }
 
       // Testing out Sequelize against a MySQL database in Railway.
-      sequelizeSession = new Sequelize(process.env['MYSQL_URL']);
+      sequelizeSession = new Sequelize(
+        process.env['MYSQLDATABASE'],
+        process.env['MYSQLUSER'],
+        process.env['MYSQLPASSWORD'],
+        {
+          dialect: 'mysql',
+          host: process.env['MYSQLHOST']
+        }
+      );
       await sequelizeSession.authenticate();
 
       // Defining the simple model.
