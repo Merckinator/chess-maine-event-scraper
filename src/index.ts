@@ -25,16 +25,16 @@ cron.schedule('0 * * * *', async () => {
     try {
       const tree = cheerio.load(response.data);
       const events = tree('.entry-header');
-      let newEvents: string[] = [];
+      let newEventNames: string[] = [];
 
       for (let i = 0; i < events.length; i++) {
-        const event = tree(events[i]).text().trim();
-        console.log('The event header is: ', event);
+        const eventName = tree(events[i]).text().trim();
+        console.log('The event header is: ', eventName);
 
-        newEvents.push(event);
+        newEventNames.push(eventName);
       }
 
-      // Testing out Sequelize against a MySQL database in Railway.
+      // Use Sequelize to connect to a MySQL database in Railway.
       sequelizeSession = new Sequelize(
         process.env['MYSQLDATABASE'],
         process.env['MYSQLUSER'],
@@ -47,7 +47,7 @@ cron.schedule('0 * * * *', async () => {
       );
       await sequelizeSession.authenticate();
 
-      // Defining the simple model.
+      // Define the simple model.
       const Event = sequelizeSession.define(
         'Event',
         {
@@ -65,21 +65,32 @@ cron.schedule('0 * * * *', async () => {
       );
       await Event.sync({ alter: true });
 
-      // TODO: Swap the tracking approach from in-memory array to using a MySQL database.
       const dbEvents = await Event.findAll();
       console.log('The events in the DB are:', JSON.stringify(dbEvents, null, 2));
 
-      // Check for new or expired events.
-      const eventsToAdd = newEvents.filter((event) => !oldEvents.includes(event));
-      const eventsToRemove = oldEvents.filter((event) => !newEvents.includes(event));
+      // Check the database for new and expired events.
+      const eventNamesToAdd = newEventNames.filter((newEvent) => !dbEvents.map((oldEvent: any) => oldEvent.name).includes(newEvent));
+      const eventsToRemove = dbEvents.filter((oldEvent: any) => !newEventNames.includes(oldEvent.name));
 
-      // Add any new events and remove any expired ones.
-      addEvents(eventsToAdd);
-      removeEvents(eventsToRemove);
+      // Add any new events...
+      eventNamesToAdd.forEach(async (eventName) => {
+        await Event.create({
+          name: eventName
+        });
+      });
+
+      // and delete any expired events.
+      eventsToRemove.forEach(async (event: any) => {
+        await Event.destroy({
+          where: {
+            name: event.name
+          }
+        });
+      });
 
       // Send notifications about new and expired events.
-      if (eventsToAdd.length !== 0) sendNotification('New Events:\n' + eventsToAdd.join('\n'));
-      if (eventsToRemove.length !== 0) sendNotification('Removed Events:\n' + eventsToRemove.join('\n'));
+      if (eventNamesToAdd.length > 0) sendNotification('New Events:\n' + eventNamesToAdd.join('\n'));
+      if (eventsToRemove.length > 0) sendNotification('Removed Events:\n' + eventsToRemove.map((event: any) => event.name).join('\n'));
     } catch (e) {
       sendNotification(`ERROR: ${e}`);
     } finally {
@@ -89,29 +100,6 @@ cron.schedule('0 * * * *', async () => {
     sendNotification(`ERROR: ${response}`);
   }
 });
-
-
-/**
- * Events that have been posted to the website and need to be added to tracking.
- * @param events The event names to be added.
- */
-function addEvents(events: string[]): void {
-  events.forEach((event) => {
-    oldEvents.push(event);
-  });
-}
-
-
-/**
- * Events that have already occurred can be removed from tracking.
- * @param events The event names to be removed.
- */
-function removeEvents(events: string[]): void {
-  events.forEach((event) => {
-    const index = oldEvents.indexOf(event);
-    oldEvents.splice(index, 1);
-  });
-}
 
 
 /**
