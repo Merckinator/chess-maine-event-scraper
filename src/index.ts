@@ -57,11 +57,13 @@ cron.schedule('0 * * * *', async () => {
           },
         },
         {
-          timestamps: true,
           createdAt: 'timestamp',
+          tableName: 'events',
+          timestamps: true,
           updatedAt: false
         }
       );
+      await Event.sync({ alter: true });
 
       // TODO: Swap the tracking approach from in-memory array to using a MySQL database.
       const dbEvents = await Event.findAll();
