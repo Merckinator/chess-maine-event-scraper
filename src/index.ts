@@ -41,7 +41,8 @@ cron.schedule('0 * * * *', async () => {
         process.env['MYSQLPASSWORD'],
         {
           dialect: 'mysql',
-          host: process.env['MYSQLHOST']
+          host: process.env['MYSQLHOST'],
+          port: process.env['MYSQLPORT']
         }
       );
       await sequelizeSession.authenticate();
